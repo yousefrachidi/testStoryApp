@@ -10,7 +10,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.applicationpfe.module.ChatGPTAPI;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
@@ -40,19 +43,18 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!validateUsername() | !validatePassword()) {
+                    Toast.makeText(LoginActivity.this, "Your username or password in valid", Toast.LENGTH_SHORT).show();
 
                 } else {
                     checkUser();
                 }
+
             }
         });
 
-        signupRedirectText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-                startActivity(intent);
-            }
+        signupRedirectText.setOnClickListener(view -> {
+            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
+            startActivity(intent);
         });
 
     }
@@ -127,5 +129,28 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+
+
+    private void forTest() {
+        ChatGPTAPI chatGPTAPI = new ChatGPTAPI();
+
+        ChatGPTAPI.ResponseCallback responseCallback = new ChatGPTAPI.ResponseCallback() {
+            @Override
+            public void onSuccess(String response) {
+                // Handle successful response
+                System.out.println("API response: " + response);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Handle error
+                System.err.println("API error: " + errorMessage);
+            }
+        };
+
+        String question = "Hi";
+        chatGPTAPI.getResponse(question, responseCallback);
     }
 }

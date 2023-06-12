@@ -1,6 +1,6 @@
-package com.example.applicationpfe;
+package com.example.applicationpfe.module;
 
-public class HelperClass {
+public class User {
 
         String name, email, username, password;
 
@@ -36,14 +36,14 @@ public class HelperClass {
             this.password = password;
         }
 
-        public HelperClass(String name, String email, String username, String password) {
+        public User(String name, String email, String username, String password) {
             this.name = name;
             this.email = email;
             this.username = username;
             this.password = password;
         }
 
-        public HelperClass() {
+        public User() {
         }
 
 }
