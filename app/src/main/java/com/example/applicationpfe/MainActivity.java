@@ -8,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -62,19 +63,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
              if(id== R.id.nav_settings) {
-                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
+                // getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
              }
 
             if(id== R.id.nav_share) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ShareFragment()).commit();
+            // getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ShareFragment()).commit();
+                shareApp();
             }
 
             if(id== R.id.nav_about) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AboutFragment()).commit();
+            //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AboutFragment()).commit();
             }
 
             if(id== R.id.nav_logout){
                 Toast.makeText(this, "Logout!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(getBaseContext(), LoginActivity.class));
 
               }
 
@@ -90,4 +93,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             super.onBackPressed();
         }
     }
+
+    public void shareApp() {
+        // Create an intent with the ACTION_SEND action
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+
+        // Set the subject (optional)
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Check out this app!");
+
+        // Set the text to share
+        String appLink = "https://play.google.com/store/apps/details?id="+getPackageName();
+        String shareText = "Hey, I found this amazing app. You should check it out!\n\n" + appLink;
+        intent.putExtra(Intent.EXTRA_TEXT, shareText);
+
+        // Start the sharing activity
+        startActivity(Intent.createChooser(intent, "Share via"));
+    }
+
 }
