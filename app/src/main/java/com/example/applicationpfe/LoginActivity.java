@@ -13,12 +13,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.applicationpfe.module.ChatGPTAPI;
+import com.example.applicationpfe.module.PasswordHashing;
+import com.example.applicationpfe.module.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -29,26 +33,32 @@ public class LoginActivity extends AppCompatActivity {
     Button loginButton;
     TextView signupRedirectText;
 
+    FirebaseFirestore db ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        initiaView();
+
+    }
+
+    private void initiaView() {
+         db = FirebaseFirestore.getInstance();
 
         loginUsername = findViewById(R.id.login_username);
         loginPassword = findViewById(R.id.login_password);
         loginButton = findViewById(R.id.login_button);
         signupRedirectText = findViewById(R.id.signupRedirectText);
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!validateUsername() | !validatePassword()) {
-                    Toast.makeText(LoginActivity.this, "Your username or password in valid", Toast.LENGTH_SHORT).show();
+        loginButton.setOnClickListener(view -> {
 
-                } else {
-                    checkUser();
-                }
+            if (!validateUsername() | !validatePassword()) {
+                Toast.makeText(LoginActivity.this, "Your username or password in valid", Toast.LENGTH_SHORT).show();
 
+            } else {
+                checkUser();
             }
         });
 
@@ -81,76 +91,55 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
     public void checkUser(){
+
         String userUsername = loginUsername.getText().toString().trim();
         String userPassword = loginPassword.getText().toString().trim();
+         userPassword = PasswordHashing.hashPassword(userPassword);
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
-        Query checkUserDatabase = reference.orderByChild("username").equalTo(userUsername);
 
-        checkUserDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+        db.collection("users")
+                .whereEqualTo("username", userUsername)
+                .whereEqualTo("password", userPassword)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // User with matching credentials found
+                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            User user = documentSnapshot.toObject(User.class);
+                            // Do something with the user data
+                            Log.d("TAG", "User found: " + user.getName());
 
-                if (snapshot.exists()){
-
-                    loginUsername.setError(null);
-                    String passwordFromDB = snapshot.child(userUsername).child("password").getValue(String.class);
-
-                    if (passwordFromDB.equals(userPassword)) {
-                        loginUsername.setError(null);
-
-                        String nameFromDB = snapshot.child(userUsername).child("name").getValue(String.class);
-                        String emailFromDB = snapshot.child(userUsername).child("email").getValue(String.class);
-                        String usernameFromDB = snapshot.child(userUsername).child("username").getValue(String.class);
-
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-
-                        intent.putExtra("name", nameFromDB);
-                        intent.putExtra("email", emailFromDB);
-                        intent.putExtra("username", usernameFromDB);
-                        intent.putExtra("password", passwordFromDB);
-
-                        startActivity(intent);
+                            onNext(user);
+                            loginUsername.setError(null);
+                        }
                     } else {
+                        // No user found with the provided credentials
+                        Log.d("TAG", "User not found");
                         loginPassword.setError("Invalid Credentials");
                         loginPassword.requestFocus();
                     }
-                } else {
-                    loginUsername.setError("User does not exist");
-                    loginUsername.requestFocus();
-                }
-            }
+                })
+                .addOnFailureListener(e -> {
+                    // Error retrieving user data
+                    Log.w("TAG", "Error getting user document", e);
+                });
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.d("DatabaseError", "onCancelled: "+error.getMessage());
+    }
 
-            }
-        });
+    private void onNext(User user) {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
+        intent.putExtra("name", user.getName());
+        intent.putExtra("email", user.getEmail());
+        intent.putExtra("username", user.getUsername());
+        intent.putExtra("password", user.getPassword());
+
+        startActivity(intent);
     }
 
 
 
-    private void forTest() {
-        ChatGPTAPI chatGPTAPI = new ChatGPTAPI();
 
-        ChatGPTAPI.ResponseCallback responseCallback = new ChatGPTAPI.ResponseCallback() {
-            @Override
-            public void onSuccess(String response) {
-                // Handle successful response
-                System.out.println("API response: " + response);
-            }
 
-            @Override
-            public void onError(String errorMessage) {
-                // Handle error
-                System.err.println("API error: " + errorMessage);
-            }
-        };
-
-        String question = "Hi";
-        chatGPTAPI.getResponse(question, responseCallback);
-    }
 }

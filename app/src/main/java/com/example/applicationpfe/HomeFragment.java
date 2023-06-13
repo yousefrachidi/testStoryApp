@@ -26,4 +26,26 @@ public class HomeFragment extends Fragment {
 
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
+
+
+    private void forTest() {
+        ChatGPTAPI chatGPTAPI = new ChatGPTAPI();
+
+        ChatGPTAPI.ResponseCallback responseCallback = new ChatGPTAPI.ResponseCallback() {
+            @Override
+            public void onSuccess(String response) {
+                // Handle successful response
+                System.out.println("API response: " + response);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Handle error
+                System.err.println("API error: " + errorMessage);
+            }
+        };
+
+        String question = "Hi";
+        chatGPTAPI.getResponse(question, responseCallback);
+    }
 }
